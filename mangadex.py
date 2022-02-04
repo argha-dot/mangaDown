@@ -4,6 +4,45 @@ import requests
 from misc import prompts, zip_files, rename_remove_move
 
 
+def main():
+    answers = prompts()
+
+    get_every(
+        answers["url"],
+        answers["chapters"],
+        answers["manga_name"],
+    )
+
+
+def get_every(url: str, chapters: str, manga_name: str):
+    _range: list[float] = []    
+    strings: list[str] = []
+
+    for _str in chapters.split():
+        if ".." in _str:
+            nums = _str.split("..")
+            strings.extend([str(x) for x in range(int(nums[0]), int(nums[1]) + 1)])
+        else:
+            strings.append(_str)
+
+    _range.extend(list(map(float, strings)))
+    # print(_range)
+
+    if len(_range) > 100:
+        print("No more than 100 chapters allowed, please break it up")
+        return
+
+    chapter_data = get_chapter_ids(url, _range)
+        
+    if len(chapter_data) <= 0:
+        print("chapters may not exist")
+
+    for _chapter in chapter_data:
+        download_chapter(_chapter, manga_name)
+
+    print(f"\t\tALL CHAPTERS DOWNLOADED")
+
+
 def get_chapter_ids(url: str, chapters: list[float]) -> list[dict]:
     lang_content_ratings = f'limit={len(chapters)}&translatedLanguage[]=en&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic'
     base_url = f"https://api.mangadex.org/chapter?manga={url}&{lang_content_ratings}&"
@@ -69,74 +108,46 @@ def download_chapter(_chapter: dict, manga_name: str):
         point_chapter = True
         folder_name = f"{manga_name} {chapter} (Digital)"
 
-    os.makedirs(f"{folder_name}", exist_ok=True)
-    os.makedirs(f"{manga_name}", exist_ok=True)
+    try:
+        os.makedirs(f"{folder_name}", exist_ok=True)
+        os.makedirs(f"{manga_name}", exist_ok=True)
 
-    img_urls = get_pages(uid)
+        img_urls = get_pages(uid)
 
-    if len(img_urls) <= 0:
-        print("CHAPTER MIGHT NOT EXIST")
-        return
+        if len(img_urls) <= 0:
+            print("CHAPTER MIGHT NOT EXIST")
+            return
 
-    for i, url in enumerate(img_urls):
-        r = requests.get(url)
-        r.raise_for_status()
+        loader = '|/-\\'
 
-        if point_chapter:
-            file_name = f"{str(chapter).zfill(4)}_{str(i + 1).zfill(3)}.png"
-        else:
-            file_name = f"{str(int(chapter)).zfill(4)}_{str(i + 1).zfill(3)}.png"
-        
-        try:
-            with open(os.path.join(folder_name, file_name), "wb") as f:
-                f.write(r.content)
-                print(f"[DONE] {file_name} ({url})")
+        for i, url in enumerate(img_urls):
+            r = requests.get(url)
+            r.raise_for_status()
 
-        except Exception as e:
-            print(f"Couldn't write, {e} occured")
+            if point_chapter:
+                file_name = f"{str(chapter).zfill(4)}_{str(i + 1).zfill(3)}.png"
+            else:
+                file_name = f"{str(int(chapter)).zfill(4)}_{str(i + 1).zfill(3)}.png"
+            
+            try:
+                with open(os.path.join(folder_name, file_name), "wb") as f:
+                    f.write(r.content)
+                    # print(f"[DONE] {file_name} ({url})")
+                    print(f"CHAPTER: {chapter} [{loader[i % len(loader)]}] {i}/{len(img_urls)}", end="", flush=True)
+                    sys.stdout.write('\033[2K\033[1G')
 
-    zip_files(folder_name)
-    rename_remove_move(folder_name, manga_name)
+            except Exception as e:
+                print(f"\nCouldn't write, {e} occured")
 
+        zip_files(folder_name)
+        rename_remove_move(folder_name, manga_name)
 
-def get_every(url: str, chapters: str, manga_name: str):
-    _range: list[float] = []    
-    strings: list[str] = []
+        sys.stdout.write('\033[2K\033[1G')
+        print(f"[CHAPTER {chapter} DONE]: {len(img_urls)} pages")
 
-    for _str in chapters.split():
-        if ".." in _str:
-            nums = _str.split("..")
-            strings.extend([str(x) for x in range(int(nums[0]), int(nums[1]) + 1)])
-        else:
-            strings.append(_str)
-
-    _range.extend(list(map(float, strings)))
-    # print(_range)
-
-    if len(_range) > 100:
-        print("No more than 100 chapters allowed, please break it up")
-        return
-
-    chapter_data = get_chapter_ids(url, _range)
-        
-    if len(chapter_data) <= 0:
-        print("chapters may not exist")
-
-    for _chapter in chapter_data:
-        download_chapter(_chapter, manga_name)
-
-    print(f"\t\tALL CHAPTERS DOWNLOADED")
-
-
-
-def main():
-    answers = prompts()
-
-    get_every(
-        answers["url"],
-        answers["chapters"],
-        answers["manga_name"],
-    )
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt detected, cleaning up...")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

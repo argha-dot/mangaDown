@@ -1,9 +1,38 @@
 import os, sys, shutil
-from datetime import date
 
 import requests
 
 from misc import rename_remove_move, zip_files, prompts
+
+
+def main():
+    answers = prompts()
+
+    get_every(
+        answers["url"],
+        answers["chapters"],
+        answers["manga_name"],
+    )
+
+
+def get_every(url: str, chapters: str, manga_name: str):
+    _range: list[float] = []    
+    strings: list[str] = []
+
+    for _str in chapters.split():
+        if ".." in _str:
+            nums = _str.split("..")
+            strings.extend([str(x) for x in range(int(nums[0]), int(nums[1]) + 1)])
+        else:
+            strings.append(_str)
+
+    _range.extend(list(map(float, strings)))
+    # print(_range)
+
+    for chapter in _range:
+        download_chapter(url, chapter, manga_name)
+
+    print(f"\t\tALL CHAPTERS DOWNLOADED")
 
 
 def download_chapter(url, chapter, manga_name):
@@ -12,16 +41,15 @@ def download_chapter(url, chapter, manga_name):
 
     if float.is_integer(chapter):
         point_chapters = False
-        folder_name = f"{manga_name} {int(chapter)} ({date.today().year}) (Digital)"
+        folder_name = f"{manga_name} {int(chapter)} (Digital)"
     else:
         point_chapters = True
-        folder_name = f"{manga_name} {chapter} ({date.today().year}) (Digital)"
+        folder_name = f"{manga_name} {chapter} (Digital)"
 
     try:
-        print("[", end="", flush=True)
-
         os.makedirs(f"{folder_name}", exist_ok=True)
         os.makedirs(f"{manga_name}", exist_ok=True)
+        loader = '|/-\\'
 
         for i in range(1, 100000 + 1):
             if point_chapters:
@@ -51,8 +79,9 @@ def download_chapter(url, chapter, manga_name):
             try:
                 with open(os.path.join(folder_name, file_name), "wb") as f:
                     f.write(r.content)
-                    print("=", end="", flush=True)
                     # print(f"[DONE] {file_name} ({url_img})")
+                    print(f"CHAPTER: {chapter} [{loader[i % len(loader)]}] {i}", end="", flush=True)
+                    sys.stdout.write('\033[2K\033[1G')
 
             except Exception:
                 print(f"Couldn't write {file_name}, occured!")
@@ -66,36 +95,6 @@ def download_chapter(url, chapter, manga_name):
     except KeyboardInterrupt:
         print("KeyboardInterrupt detected, cleaning up...")
         sys.exit(1)
-
-
-def get_every(url: str, chapters: str, manga_name: str):
-    _range: list[float] = []    
-    strings: list[str] = []
-
-    for _str in chapters.split():
-        if ".." in _str:
-            nums = _str.split("..")
-            strings.extend([str(x) for x in range(int(nums[0]), int(nums[1]) + 1)])
-        else:
-            strings.append(_str)
-
-    _range.extend(list(map(float, strings)))
-    # print(_range)
-
-    for chapter in _range:
-        download_chapter(url, chapter, manga_name)
-
-    print(f"\t\tALL CHAPTERS DOWNLOADED")
-
-
-def main():
-    answers = prompts()
-
-    get_every(
-        answers["url"],
-        answers["chapters"],
-        answers["manga_name"],
-    )
 
 
 if __name__ == "__main__":
