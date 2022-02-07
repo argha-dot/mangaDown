@@ -78,19 +78,17 @@ def main():
 
             # create variables
             folder_name = f"{manga_name} - Volume {num}"
-            _file_list = get_all_file_paths(f"{manga_name}")
+            files = get_all_file_paths(f"{manga_name}")
             file_list = []
 
-            for _, file in enumerate(_file_list):
+            for _, file in enumerate(files):
                 res = re.search(r".+\\.+\s([\d\.]+)\s\(\w+\)\.cb[zr]", file)
                 if res:
                     res = float(res.group(1))
+                    if res >= start and res <= end:
+                        file_list.append(file)
                 else:
                     print(f"INVALID REGEX {file}")
-                    break
-
-                if res >= start and res <= end:
-                    file_list.append(file)
 
             pprint.pprint(file_list)
 

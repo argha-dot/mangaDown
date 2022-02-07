@@ -1,7 +1,7 @@
 import os, sys
 import requests
 
-from misc import prompts, zip_files, rename_remove_move
+from misc import prompts, zip_files, rename_remove_move, parse_chapter_input
 
 
 def main():
@@ -15,17 +15,7 @@ def main():
 
 
 def get_every(url: str, chapters: str, manga_name: str):
-    _range: list[float] = []    
-    strings: list[str] = []
-
-    for _str in chapters.split():
-        if ".." in _str:
-            nums = _str.split("..")
-            strings.extend([str(x) for x in range(int(nums[0]), int(nums[1]) + 1)])
-        else:
-            strings.append(_str)
-
-    _range.extend(list(map(float, strings)))
+    _range = parse_chapter_input(chapters)
     # print(_range)
 
     if len(_range) > 100:
@@ -147,7 +137,7 @@ def download_chapter(_chapter: dict, manga_name: str):
 
     except KeyboardInterrupt:
         print("KeyboardInterrupt detected, cleaning up...")
-        sys.exit(1)
+        sys.exit(0)
 
 
 if __name__ == "__main__":

@@ -1,8 +1,7 @@
 import os, sys, shutil
-
 import requests
 
-from misc import rename_remove_move, zip_files, prompts
+from misc import rename_remove_move, zip_files, prompts, parse_chapter_input
 
 
 def main():
@@ -16,17 +15,7 @@ def main():
 
 
 def get_every(url: str, chapters: str, manga_name: str):
-    _range: list[float] = []    
-    strings: list[str] = []
-
-    for _str in chapters.split():
-        if ".." in _str:
-            nums = _str.split("..")
-            strings.extend([str(x) for x in range(int(nums[0]), int(nums[1]) + 1)])
-        else:
-            strings.append(_str)
-
-    _range.extend(list(map(float, strings)))
+    _range = parse_chapter_input(chapters)
     # print(_range)
 
     for chapter in _range:
@@ -35,9 +24,9 @@ def get_every(url: str, chapters: str, manga_name: str):
     print(f"\t\tALL CHAPTERS DOWNLOADED")
 
 
-def download_chapter(url, chapter, manga_name):
-    total_pages = 0
-    folder_name = ""
+def download_chapter(url: str, chapter: float, manga_name: str):
+    total_pages: int = 0
+    folder_name: str = ""
 
     if float.is_integer(chapter):
         point_chapters = False
@@ -56,7 +45,6 @@ def download_chapter(url, chapter, manga_name):
                 url_img = f"{url}{str(chapter)[0:-2].zfill(4)}.{str(chapter)[-1]}-{str(i).zfill(3)}.png"
             else:
                 url_img = f"{url}{str(int(chapter)).zfill(4)}-{str(i).zfill(3)}.png"
-
 
             r = requests.get(url_img)
 
@@ -83,8 +71,9 @@ def download_chapter(url, chapter, manga_name):
                     print(f"CHAPTER: {chapter} [{loader[i % len(loader)]}] {i}", end="", flush=True)
                     sys.stdout.write('\033[2K\033[1G')
 
-            except Exception:
-                print(f"Couldn't write {file_name}, occured!")
+            except Exception as e:
+                print(f"Couldn't write {file_name}, {e} occured!")
+                sys.exit(1)
 
         zip_files(folder_name)
         rename_remove_move(folder_name, manga_name)
@@ -94,7 +83,7 @@ def download_chapter(url, chapter, manga_name):
 
     except KeyboardInterrupt:
         print("KeyboardInterrupt detected, cleaning up...")
-        sys.exit(1)
+        sys.exit(0)
 
 
 if __name__ == "__main__":

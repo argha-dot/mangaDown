@@ -1,6 +1,21 @@
 import os, shutil
 from zipfile import ZipFile
 
+def parse_chapter_input(chapters: str) -> list[float]:
+    _range: list[float] = []    
+    strings: list[str] = []
+
+    for _str in chapters.split():
+        if ".." in _str:
+            nums = _str.split("..")
+            strings.extend([str(x) for x in range(int(nums[0]), int(nums[1]) + 1)])
+        else:
+            strings.append(_str)
+
+    _range.extend(list(map(float, strings)))
+
+    return _range
+
 
 def prompts():
     print("Use '..' for ranges, and ' ' to indicate a chapter or a range\n")
