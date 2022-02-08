@@ -66,8 +66,6 @@ def rename_folder(folder_name):
 
 
 def main():
-
-    # inputs
     manga_name = input("Manga name: ")
 
     try:
@@ -76,7 +74,6 @@ def main():
             start = float(input("Starting Chapter: "))
             end = float(input("Ending Chapter: "))
 
-            # create variables
             folder_name = f"{manga_name} - Volume {num}"
             files = get_all_file_paths(f"{manga_name}")
             file_list = []

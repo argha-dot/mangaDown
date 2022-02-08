@@ -1,5 +1,6 @@
 import os, sys
 import requests
+from requests import adapters
 
 from misc import prompts, zip_files, rename_remove_move, parse_chapter_input
 
@@ -67,7 +68,7 @@ def get_chapter_ids(url: str, chapters: list[float]) -> list[dict]:
     return data
 
 
-def get_pages(uid: str) -> list[str]:
+def get_page_urls(uid: str) -> list[str]:
     r = requests.get(f'https://api.mangadex.org/at-home/server/{uid}')
     try:
         r.raise_for_status()
@@ -102,7 +103,7 @@ def download_chapter(_chapter: dict, manga_name: str):
         os.makedirs(f"{folder_name}", exist_ok=True)
         os.makedirs(f"{manga_name}", exist_ok=True)
 
-        img_urls = get_pages(uid)
+        img_urls = get_page_urls(uid)
 
         if len(img_urls) <= 0:
             print("CHAPTER MIGHT NOT EXIST")
@@ -110,8 +111,12 @@ def download_chapter(_chapter: dict, manga_name: str):
 
         loader = '|/-\\'
 
+        s = requests.Session()
+        adapter = adapters.HTTPAdapter(max_retries=5)
+        s.mount('https://', adapter)
+
         for i, url in enumerate(img_urls):
-            r = requests.get(url)
+            r = s.get(url)
             r.raise_for_status()
 
             if point_chapter:

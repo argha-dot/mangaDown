@@ -1,7 +1,8 @@
 import os, sys, shutil
 import requests
+from requests import adapters
 
-from misc import rename_remove_move, zip_files, prompts, parse_chapter_input
+from misc import rename_remove_move, zip_files, prompts, parse_chapter_input, HEADERS
 
 
 def main():
@@ -40,13 +41,18 @@ def download_chapter(url: str, chapter: float, manga_name: str):
         os.makedirs(f"{manga_name}", exist_ok=True)
         loader = '|/-\\'
 
+        s = requests.Session()
+        adapter = adapters.HTTPAdapter(max_retries=5)
+        s.mount('https://', adapter)
+        s.headers.update(HEADERS)
+
         for i in range(1, 100000 + 1):
             if point_chapters:
                 url_img = f"{url}{str(chapter)[0:-2].zfill(4)}.{str(chapter)[-1]}-{str(i).zfill(3)}.png"
             else:
                 url_img = f"{url}{str(int(chapter)).zfill(4)}-{str(i).zfill(3)}.png"
 
-            r = requests.get(url_img)
+            r = s.get(url_img)
 
             try:
                 r.raise_for_status()

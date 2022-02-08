@@ -1,6 +1,7 @@
 import os, sys, re
 
 import requests
+from requests import adapters
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
@@ -95,8 +96,12 @@ def download_chapter(chapter_url: str, chapter: float, manga_name: str):
 
         loader = '|/-\\'
 
-        for i, chapter_url in enumerate(img_urls):
-            r = requests.get(chapter_url)
+        s = requests.Session()
+        adapter = adapters.HTTPAdapter(max_retries=5)
+        s.mount('https://', adapter)
+
+        for i, page_url in enumerate(img_urls):
+            r = s.get(page_url)
             r.raise_for_status()
 
             if point_chapter:
