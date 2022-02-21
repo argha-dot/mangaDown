@@ -1,4 +1,4 @@
-import os,  shutil, zipfile, pprint,  re
+import os, shutil, zipfile, re
 
 
 def get_all_file_paths(directory):
@@ -85,9 +85,10 @@ def main():
                     if res >= start and res <= end:
                         file_list.append(file)
                 else:
-                    print(f"INVALID REGEX {file}")
+                    pass
+                    # print(f"INVALID REGEX {file}")
 
-            pprint.pprint(file_list)
+            # pprint.pprint(file_list)
 
             extract_all_files(file_list, folder_name)
             # move_em(folder_name)

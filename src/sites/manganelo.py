@@ -5,7 +5,7 @@ from requests import adapters
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from misc import prompts, parse_chapter_input, zip_files, rename_remove_move
+from src.misc.misc import prompts, parse_chapter_input, zip_files, rename_remove_move
 
 def main():
     answers = prompts()
@@ -42,7 +42,7 @@ def get_chapter_links(manga_url: str, chapters: list[float]) -> list[dict]:
             for chapter in chapters:
                 _ch = int(chapter) if float.is_integer(chapter) else chapter
                 row = chunk.find('a', string=re.compile(f'Chapter {_ch}'))
-                # print(f"{ DOMAIN }{ row['href'] if isinstance(row, Tag) else None }")
+
                 if isinstance(row, Tag):
                     chapter_urls.append({
                         'chapter': chapter,

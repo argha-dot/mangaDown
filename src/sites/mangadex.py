@@ -2,7 +2,7 @@ import os, sys
 import requests
 from requests import adapters
 
-from misc import prompts, zip_files, rename_remove_move, parse_chapter_input
+from src.misc.misc import prompts, zip_files, rename_remove_move, parse_chapter_input
 
 
 def main():
@@ -17,7 +17,6 @@ def main():
 
 def get_every(url: str, chapters: str, manga_name: str):
     _range = parse_chapter_input(chapters)
-    # print(_range)
 
     if len(_range) > 100:
         print("No more than 100 chapters allowed, please break it up")
