@@ -33,7 +33,7 @@ def get_chapter_links(manga_url: str, chapters: list[float]) -> list[dict]:
     r.raise_for_status()
     soup = BeautifulSoup(r.text, 'html.parser')
 
-    DOMAIN = 'https://ww1.mangakakalot.tv'
+    DOMAIN = 'https://ww2.mangakakalot.tv'
     chapter_urls: list[dict] = []
 
     try:

@@ -5,7 +5,7 @@ from requests import adapters
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from src.misc.misc import prompts, parse_chapter_input, zip_files, rename_remove_move, DOMAINS, HEADERS
+from src.misc.misc import prompts, parse_chapter_input, zip_files, rename_remove_move, HEADERS
 
 def main():
     answers = prompts()
@@ -69,7 +69,7 @@ def get_img_urls(chapter_url: str) -> list[str]:
     r.raise_for_status()
     soup = BeautifulSoup(r.text, 'html.parser')
 
-    tag = DOMAINS[re.findall(r"(https://[w|\d]{0,3}.[\w\d\.\-]+)", chapter_url)[0]]
+    tag = 'vung-doc'
 
     img_urls = []
 

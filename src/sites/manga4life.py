@@ -1,8 +1,8 @@
 import os, sys
-from requests import adapters, Session
-
 import concurrent.futures
 from functools import partial
+
+from requests import adapters, Session
 
 from src.misc.misc import (
     rename_remove_move,
@@ -23,9 +23,10 @@ def main():
         answers["manga_name"],
     )
 
+
 def get_every(url: str, chapters: str, manga_name: str):
     _range = parse_chapter_input(chapters)
-    # print(_range)
+    print(_range)
 
     s = Session()
     adapter = adapters.HTTPAdapter(max_retries=2)
@@ -68,14 +69,24 @@ def download_chapter(url: str, chapter: float, manga_name: str, s: Session):
         rename_remove_move(folder_name, manga_name)
 
         sys.stdout.write('\033[2K\033[1G')
-        print(f"[CHAPTER {chapter} DONE]: {loader_counter} pages")
+        if loader_counter:
+            print(f"[CHAPTER {chapter} DONE]: {loader_counter} pages")
+        else:
+            print(f"CHAPTER MAY NOT EXIST Chapter: {chapter}]")
 
     except KeyboardInterrupt:
         print("KeyboardInterrupt detected, cleaning up...")
         sys.exit(0)
 
 
-def get_page(url: str, chapter: float, folder_name: str, session: Session, point_chapter: bool, loader_counter: list[int], cont: list[bool], page: int) -> None:
+def get_page(url: str,
+             chapter: float,
+             folder_name: str,
+             session: Session,
+             point_chapter: bool,
+             loader_counter: list[int],
+             cont: list[bool],
+             page: int) -> None:
     if cont[0]:
         if point_chapter:
             url_img = f"{url}{str(chapter)[0:-2].zfill(4)}.{str(chapter)[-1]}-{str(page).zfill(3)}.png"
@@ -102,8 +113,7 @@ def get_page(url: str, chapter: float, folder_name: str, session: Session, point
         try:
             with open(os.path.join(folder_name, file_name), "wb") as f:
                 f.write(r.content)
-                # print(f"[DONE] {page}")
-                print(f"CHAPTER: {chapter} [{LOADER[loader_counter[0] % len(LOADER)]}] {loader_counter[0]}\t", end="", flush=True)
+                print(f'CHAPTER: {chapter} [{LOADER[loader_counter[0] % len(LOADER)]}] {loader_counter[0]}\t', end="", flush=True)
                 sys.stdout.write('\033[2K\033[1G')
                 loader_counter[0] += 1
 

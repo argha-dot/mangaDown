@@ -99,9 +99,6 @@ def main():
         print("[DONE]...")
         pass
 
-    # delete_folder(f"{manga_name}")
-    # os.makedirs(f"{manga_name}")
-
 
 if __name__ == "__main__":
     main()

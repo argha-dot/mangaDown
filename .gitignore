@@ -2,3 +2,4 @@ __pycache__/
 ignore/
 venv/
 pyrightconfig.json
+main.exe
