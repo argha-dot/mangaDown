@@ -1,38 +1,38 @@
 import os, sys
 import concurrent.futures
 from functools import partial
+from urllib.parse import urljoin
 
 from requests import adapters, Session
 
 from src.misc.misc import (
     rename_remove_move,
     zip_files, 
-    prompts, 
     parse_chapter_input, 
     HEADERS,
     LOADER
 )
+from src.misc.prompt import prompt
 
 
 def main():
-    answers = prompts()
+    answers = prompt()
 
     get_every(
-        answers["url"],
-        answers["chapters"],
-        answers["manga_name"],
+        url=answers.url,
+        chapters=answers.chapters,
+        manga_name=answers.manga_name
     )
 
 
 def get_every(url: str, chapters: str, manga_name: str):
     _range = parse_chapter_input(chapters)
-    print(_range)
 
     s = Session()
     adapter = adapters.HTTPAdapter(max_retries=2)
     s.mount("https://", adapter)
     s.headers.update(HEADERS)
-        
+
     for chapter in _range:
         download_chapter(url, chapter, manga_name, s)
 
@@ -69,7 +69,7 @@ def download_chapter(url: str, chapter: float, manga_name: str, s: Session):
         rename_remove_move(folder_name, manga_name)
 
         sys.stdout.write('\033[2K\033[1G')
-        if loader_counter:
+        if loader_counter[0]:
             print(f"[CHAPTER {chapter} DONE]: {loader_counter} pages")
         else:
             print(f"CHAPTER MAY NOT EXIST Chapter: {chapter}]")
@@ -89,9 +89,13 @@ def get_page(url: str,
              page: int) -> None:
     if cont[0]:
         if point_chapter:
-            url_img = f"{url}{str(chapter)[0:-2].zfill(4)}.{str(chapter)[-1]}-{str(page).zfill(3)}.png"
+            _url_img = f"{str(chapter)[0:-2].zfill(4)}.{str(chapter)[-1]}-{str(page).zfill(3)}.png"
         else:
-            url_img = f"{url}{str(int(chapter)).zfill(4)}-{str(page).zfill(3)}.png"
+            _url_img = f"{str(int(chapter)).zfill(4)}-{str(page).zfill(3)}.png"
+
+
+        url = url if url.endswith("/") else f"{url}/"
+        url_img = urljoin(url, _url_img)
 
         r = session.get(url_img)
 

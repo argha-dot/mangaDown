@@ -5,15 +5,16 @@ from requests import adapters
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from src.misc.misc import prompts, parse_chapter_input, zip_files, rename_remove_move
+from src.misc.misc import parse_chapter_input, zip_files, rename_remove_move
+from src.misc.prompt import prompt
 
 def main():
-    answers = prompts()
+    answers = prompt()
 
     get_every(
-        answers["url"],
-        answers["chapters"],
-        answers["manga_name"],
+        url=answers.url,
+        chapters=answers.chapters,
+        manga_name=answers.manga_name
     )
 
 

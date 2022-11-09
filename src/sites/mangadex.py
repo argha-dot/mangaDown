@@ -5,16 +5,17 @@ import requests
 from requests import adapters
 from requests import Session
 
-from src.misc.misc import prompts, zip_files, rename_remove_move, parse_chapter_input, LOADER
+from src.misc.misc import zip_files, rename_remove_move, parse_chapter_input, LOADER
+from src.misc.prompt import prompt
 
 
 def main():
-    answers = prompts()
+    answers = prompt()
 
     get_every(
-        answers["url"],
-        answers["chapters"],
-        answers["manga_name"],
+        url=answers.url,
+        chapters=answers.chapters,
+        manga_name=answers.manga_name,
     )
 
 

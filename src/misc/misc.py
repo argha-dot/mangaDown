@@ -1,4 +1,4 @@
-import os, shutil, sys
+import os, shutil
 from zipfile import ZipFile
 
 LOADER = '|/-\\'
@@ -40,23 +40,23 @@ def parse_chapter_input(chapters: str) -> list[float]:
     return _range
 
 
-def prompts():
-    print("Use '..' for ranges, and ' ' to indicate a chapter or a range\n")
-
-    try:
-        url = input("Link: ").strip()
-        chapters = input("The Chapters: ").strip()
-        manga_name = input("Manga Name: ").strip()
-    except KeyboardInterrupt:
-        sys.exit(0)
-
-    return {
-        "url": url,
-        "chapters": chapters,
-        "manga_name": manga_name,
-    }
-
-
+# def _prompts():
+#     print("Use '..' for ranges, and ' ' to indicate a chapter or a range\n")
+#
+#     try:
+#         url = input("Link: ").strip()
+#         chapters = input("The Chapters: ").strip()
+#         manga_name = input("Manga Name: ").strip()
+#     except KeyboardInterrupt:
+#         sys.exit(0)
+#
+#     return {
+#         "url": url,
+#         "chapters": chapters,
+#         "manga_name": manga_name,
+#     }
+#
+#
 def get_all_file_paths(directory):
     file_paths = []
 
@@ -83,3 +83,4 @@ def zip_files(folder_name):
     with ZipFile(f"{folder_name}.zip", "w") as zip_file:
         for file in file_paths:
             zip_file.write(f"{file}")
+

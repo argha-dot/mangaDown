@@ -1,36 +1,42 @@
 import os, sys, re
 
-import requests
-from requests import adapters
+from requests import adapters, Session
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from src.misc.misc import prompts, parse_chapter_input, zip_files, rename_remove_move, HEADERS
+
+from src.misc.misc import parse_chapter_input, zip_files, rename_remove_move, HEADERS
+from src.misc.prompt import prompt
 
 def main():
-    answers = prompts()
+    answers = prompt()
 
     get_every(
-        answers["url"],
-        answers["chapters"],
-        answers["manga_name"],
+        url=answers.url,
+        chapters=answers.chapters,
+        manga_name=answers.manga_name
     )
 
 
 def get_every(url: str, chapters: str, manga_name: str):
     _range = parse_chapter_input(chapters)
 
-    chapter_urls = get_chapter_links(url, _range)
+    s = Session()
+    adapter = adapters.HTTPAdapter(max_retries=2)
+    s.mount("https://", adapter)
+    s.headers.update(HEADERS)
+
+    chapter_urls = get_chapter_links(url, _range, s)
     print(chapter_urls)
     for chapter in chapter_urls:
         chapter_n = chapter['chapter']
         chapter_url = chapter['url']
 
-        download_chapter(chapter_url, chapter_n, manga_name)
+        download_chapter(chapter_url, chapter_n, manga_name, s)
 
 
-def get_chapter_links(manga_url: str, chapters: list[float]) -> list[dict]:
-    r = requests.get(manga_url)
+def get_chapter_links(manga_url: str, chapters: list[float], session: Session) -> list[dict]:
+    r = session.get(manga_url)
     r.raise_for_status()
     soup = BeautifulSoup(r.text, 'html.parser')
 
@@ -64,8 +70,8 @@ def get_chapter_links(manga_url: str, chapters: list[float]) -> list[dict]:
     return chapter_urls
 
 
-def get_img_urls(chapter_url: str) -> list[str]:
-    r = requests.get(chapter_url)
+def get_img_urls(chapter_url: str, session: Session) -> list[str]:
+    r = session.get(chapter_url)
     r.raise_for_status()
     soup = BeautifulSoup(r.text, 'html.parser')
 
@@ -82,7 +88,7 @@ def get_img_urls(chapter_url: str) -> list[str]:
                     img_urls.append(tag['src'])
                 elif tag.get('data-src'):
                     img_urls.append(tag['data-src'])
-            
+
                 # img_urls.append(tag['data-src'])
 
     except Exception as e:
@@ -91,7 +97,7 @@ def get_img_urls(chapter_url: str) -> list[str]:
     return img_urls
 
 
-def download_chapter(chapter_url: str, chapter: float, manga_name: str):
+def download_chapter(chapter_url: str, chapter: float, manga_name: str, s: Session):
     if float.is_integer(chapter):
         point_chapter = False
         folder_name = f"{manga_name} {int(chapter)} (Digital)"
@@ -103,7 +109,11 @@ def download_chapter(chapter_url: str, chapter: float, manga_name: str):
         os.makedirs(f"{folder_name}", exist_ok=True)
         os.makedirs(f"{manga_name}", exist_ok=True)
 
-        img_urls = get_img_urls(chapter_url)
+        s.headers.update({
+            "referer": re.findall(r"(https://[w|\d]{0,3}.[\w\d\.\-]+)", chapter_url)[0]
+        })
+
+        img_urls = get_img_urls(chapter_url, s)
 
         if len(img_urls) <= 0:
             print("CHAPTER MIGHT NOT EXIST")
@@ -111,13 +121,6 @@ def download_chapter(chapter_url: str, chapter: float, manga_name: str):
 
         loader = '|/-\\'
 
-        s = requests.Session()
-        adapter = adapters.HTTPAdapter(max_retries=5)
-        s.mount('https://', adapter)
-        s.headers.update(HEADERS)
-        s.headers.update({
-            "referer": re.findall(r"(https://[w|\d]{0,3}.[\w\d\.\-]+)", chapter_url)[0]
-        })
 
         for i, page_url in enumerate(img_urls):
             r = s.get(page_url)
@@ -127,7 +130,7 @@ def download_chapter(chapter_url: str, chapter: float, manga_name: str):
                 file_name = f"{str(chapter).zfill(4)}_{str(i + 1).zfill(3)}.png"
             else:
                 file_name = f"{str(int(chapter)).zfill(4)}_{str(i + 1).zfill(3)}.png"
-            
+
             try:
                 with open(os.path.join(folder_name, file_name), "wb") as f:
                     f.write(r.content)
