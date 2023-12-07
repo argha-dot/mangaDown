@@ -2,15 +2,27 @@ use camino::Utf8Path;
 use reqwest::Client;
 use url::Url;
 
-use crate::utils::{create_folder, download_page, is_int, zip_rename_delete};
+use crate::misc::utils::{create_folder, download_page, is_int, zip_rename_delete};
+use crate::misc::prompt::get_user_input;
 
-pub async fn download_chapter(base_url: &str, manga_name: &str, chapter: f32, client: &Client) {
+pub async fn get_every() {
+    let ans = get_user_input();
+
+    let client = Client::new();
+    for chapter in ans.chapter_range {
+        download_chapter(&ans.url, &ans.manga_name, chapter, &client).await;
+    }
+
+    println!("\nALL CHAPTERS DOWNLOAD");
+}
+
+pub async fn download_chapter(base_url: &Url, manga_name: &str, chapter: f32, client: &Client) {
     let (chapter_folder_name, is_point_chapter) = if is_int(chapter) {
         (format!("{} {}", manga_name, chapter.floor()), false)
     } else {
         (format!("{} {}", manga_name, chapter), true)
     };
-    // println!("{} {}", chapter_folder_name, is_point_chapter);
+
     let chapter_path = Utf8Path::new("./")
         .join(&manga_name)
         .join(&chapter_folder_name);
@@ -20,15 +32,18 @@ pub async fn download_chapter(base_url: &str, manga_name: &str, chapter: f32, cl
     };
 
     let pages: Vec<i32> = (1..1001).collect();
-    let base_url = Url::parse(&base_url);
-    let base_url = match base_url {
-        Ok(url) => url,
-        Err(err) => panic!("[ERROR] Can't Get url {:?}", err),
-    };
 
     let url_chapter_string = if is_point_chapter {
-        println!("{:0>4}.{}", chapter.trunc(), (chapter.fract() * 10.0).floor());
-        format!("{:0>4}.{}", chapter.trunc(), (chapter.fract() * 10.0).floor())
+        println!(
+            "{:0>4}.{}",
+            chapter.trunc(),
+            (chapter.fract() * 10.0).floor()
+        );
+        format!(
+            "{:0>4}.{}",
+            chapter.trunc(),
+            (chapter.fract() * 10.0).floor()
+        )
     } else {
         format!("{:0>4}", chapter)
     };

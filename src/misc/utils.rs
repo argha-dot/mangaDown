@@ -49,7 +49,7 @@ pub fn zip_rename_delete(chapter_path: &Utf8Path, chapter_folder_name: &str) {
     };
 
     let _ = match fs::remove_dir_all(chapter_path) {
-        Ok(()) => {},
+        Ok(()) => {}
         Err(err) => panic!("[ERROR] Couldn't Delete Folder {:?}", err),
     };
 }
