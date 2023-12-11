@@ -1,16 +1,18 @@
+use std::sync::{Arc, Mutex};
+
 use camino::Utf8Path;
+use futures::{stream, StreamExt};
 use reqwest::Client;
 use url::Url;
 
+use crate::misc::ParsedAnswers;
 use crate::misc::utils::{create_folder, download_page, is_int, zip_rename_delete};
-use crate::misc::prompt::get_user_input;
 
-pub async fn get_every() {
-    let ans = get_user_input();
+pub async fn get_multiple_chapters(answers: ParsedAnswers) {
 
     let client = Client::new();
-    for chapter in ans.chapter_range {
-        download_chapter(&ans.url, &ans.manga_name, chapter, &client).await;
+    for chapter in answers.chapter_range {
+        download_chapter(&answers.url, &answers.manga_name, chapter, &client).await;
     }
 
     println!("\nALL CHAPTERS DOWNLOAD");
@@ -31,7 +33,7 @@ pub async fn download_chapter(base_url: &Url, manga_name: &str, chapter: f32, cl
         Err(err) => panic!("[ERROR] Can't Create Folder {:?}", err),
     };
 
-    let pages: Vec<i32> = (1..1001).collect();
+    let pages: Vec<i32> = (1..101).collect();
 
     let url_chapter_string = if is_point_chapter {
         println!(
@@ -48,29 +50,40 @@ pub async fn download_chapter(base_url: &Url, manga_name: &str, chapter: f32, cl
         format!("{:0>4}", chapter)
     };
 
-    for i in pages.iter() {
-        let url_file_string = format!("{}-{:0>3}.png", url_chapter_string, i);
-        let url = match base_url.join(&url_file_string) {
-            Ok(url) => url,
-            Err(err) => panic!("[ERROR] Can't Get url {:?}", err),
-        };
+    let shared_continue = Arc::new(Mutex::new(true));
 
-        let client = client;
-        let file_path = chapter_path.join(format!("{:0>3}.png", i));
-        let _ = match download_page(client, url.clone(), &file_path).await {
-            Ok(_) => {}
-            Err(_) => {
-                if *i == 1 {
-                    println!("CHAPTER MAY NOT EXIST")
-                } else {
-                    println!("CHAPTER DOWNLOADED");
-                    break;
+    stream::iter(pages)
+        .map(|i| {
+            let url_file_string = format!("{}-{:0>3}.png", url_chapter_string, i);
+            let url = match base_url.join(&url_file_string) {
+                Ok(url) => url,
+                Err(err) => panic!("[ERROR] Can't Get url {:?}", err),
+            };
+
+            let client = client;
+            let file_path = chapter_path.join(format!("{:0>3}.png", i));
+            let s_continue = Arc::clone(&shared_continue);
+
+            async move {
+                if *s_continue.lock().unwrap() {
+                    match download_page(client, url.clone(), &file_path).await {
+                        Ok(_) => {}
+                        Err(_) => {
+                            let mut state = s_continue.lock().unwrap();
+                            *state = false;
+                            if i == 1 {
+                                println!("CHAPTER MAY NOT EXIST");
+                            } else {
+                                println!("CHAPTER DOWNLOADED");
+                            }
+                        }
+                    }
                 }
             }
-        };
-
-        println!("finished {}", i);
-    }
+        })
+        .buffer_unordered(5)
+        .collect::<Vec<()>>()
+        .await;
 
     zip_rename_delete(&chapter_path, &chapter_folder_name);
 }

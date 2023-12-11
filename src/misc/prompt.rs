@@ -2,12 +2,6 @@ use promptly::prompt;
 use std::error::Error;
 use url::Url;
 
-struct PromptAnswers {
-    url: String,
-    manga_name: String,
-    chapter_range: String,
-}
-
 #[derive(Debug)]
 pub struct ParsedAnswers {
     pub url: Url,
@@ -44,40 +38,59 @@ pub fn parse_chapter(chapters: String) -> Result<Vec<f32>, Box<dyn Error>> {
     Ok(parsed_chapters)
 }
 
-fn prompt_user() -> Result<PromptAnswers, Box<dyn Error>> {
+pub fn prompt_user() -> ParsedAnswers {
     println!("Use '..' for ranges, and put a space in between each range or chapter");
+    let url = loop {
+        let user_input_url: String = match prompt("Link") {
+            Ok(u) => u,
+            Err(err) => {
+                panic!("[ERROR] Couldn't Read URL: {}", err)
+            }
+        };
+        let parsed_url = Url::parse(&user_input_url);
+        match parsed_url {
+            Ok(url) => {
+                break url;
+            }
+            Err(err) => {
+                println!("[ERROR] Couldn't Parse URL: {}", err);
+                continue;
+            }
+        };
+    };
 
-    let url: String = prompt("Link")?;
-    let chapter_range: String = prompt("Chapters")?;
-    let manga_name: String = prompt("Manga Name")?;
+    let chapter_range = loop {
+        let chapter_range: String = match prompt("Chapters") {
+            Ok(c) => c,
+            Err(err) => {
+                panic!("[ERROR] Couldn't Read Chapter Range: {}", err);
+            }
+        };
+        match parse_chapter(chapter_range) {
+            Ok(chapters) => {
+                break chapters;
+            }
+            Err(err) => {
+                println!("[ERROR] Couldn't Parse Chapters {:?}", err);
+                continue;
+            }
+        };
+    };
 
-    Ok(PromptAnswers {
+    let manga_name = loop {
+        let _: String = match prompt("Manga Name") {
+            Ok(m) => {
+                break m;
+            }
+            Err(err) => {
+                panic!("[ERROR] Couldn't Read Manga Name: {}", err);
+            }
+        };
+    };
+
+    return ParsedAnswers {
         url,
         manga_name,
         chapter_range,
-    })
-}
-
-pub fn get_user_input() -> ParsedAnswers {
-    let answers = match prompt_user() {
-        Ok(answer) => answer,
-        Err(err) => panic!("[ERROR] Couldn't Read Prompt {:?}", err),
     };
-
-    let chapters = match parse_chapter(answers.chapter_range) {
-        Ok(chapters) => chapters,
-        Err(err) => panic!("[ERROR] Couldn't Parse Chapters {:?}", err),
-    };
-
-    let url = Url::parse(&answers.url);
-    let url = match url {
-        Ok(url) => url,
-        Err(err) => panic!("[ERROR] Couldn't Parse URL: {}", err)
-    };
-
-    ParsedAnswers {
-        url,
-        manga_name: answers.manga_name,
-        chapter_range: chapters
-    }
 }
