@@ -65,7 +65,6 @@ pub async fn download_page(
         Err(err) => return Err(Box::new(err)),
     };
     let file_content = res.bytes().await?;
-    println!("Download file: {} bytes", file_content.len());
 
     write_file(file_path, file_content)?;
     Ok(())

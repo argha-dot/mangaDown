@@ -694,6 +694,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
+name = "manga-down"
+version = "0.9.0"
+dependencies = [
+ "bytes",
+ "camino",
+ "futures",
+ "promptly",
+ "reqwest",
+ "tokio",
+ "url",
+ "zip",
+ "zip-extensions",
+]
+
+[[package]]
 name = "memchr"
 version = "2.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -706,21 +721,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "mig"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "camino",
- "futures",
- "promptly",
- "reqwest",
- "tokio",
- "url",
- "zip",
- "zip-extensions",
 ]
 
 [[package]]
