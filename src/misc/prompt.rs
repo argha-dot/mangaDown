@@ -88,9 +88,9 @@ pub fn prompt_user() -> ParsedAnswers {
         };
     };
 
-    return ParsedAnswers {
+    ParsedAnswers {
         url,
         manga_name,
         chapter_range,
-    };
+    }
 }
